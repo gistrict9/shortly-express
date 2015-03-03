@@ -4,6 +4,7 @@ var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var cookieParser = require('cookie-parser');
+var bcrypt = require('bcrypt-nodejs');
 
 
 var db = require('./app/config');
@@ -125,16 +126,18 @@ function(req, res){
   var username = req.body.username;
   var pw = req.body.password;
   // check if username exists
-  new User({username: username}).fetch().then(function(found, req, res) {
+  new User({username: username}).fetch().then(function(found) {
     if (found) {
       res.status(301);
       res.redirect('/signup');
     } else {
       var user = new User({username: username, password: pw});
-      user.save().then(function(userObj, req, res) {
-        req.session.regenerate(function(){
-            req.session.user = userObj.username;
-            res.redirect('/');
+      bcrypt.hash(pw, null, null, function(err, hash) {
+        user.save({ password: hash }).then(function(userObj) {
+          req.session.username = userObj.attributes.username;
+          req.session.userId = userObj.attributes.id;
+          res.status(201);
+          res.redirect('/');
         });
       });
     }
@@ -147,9 +150,6 @@ function(req, res){
       // create session for user
       // redirect to home page
 
-  console.log(req.body);
-  res.status(201);
-  res.send();
 });
 
 // app.post('/logout')
