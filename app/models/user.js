@@ -10,10 +10,10 @@ var User = db.Model.extend({
   },
   initialize: function() {
     this.on('creating', function(model, attrs, options){
-      var pw = model.get('hash');
+      var pw = model.get('password');
       bcrypt.hash(pw, null, null, function(err, hash){
         if ( err ) console.log(err);
-        model.set('hash', hash);
+        model.set('password', hash);
       }.bind(this));
     });
   }
