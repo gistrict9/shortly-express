@@ -111,18 +111,22 @@ function(req, res){
   var username = req.body.username;
   var pw = req.body.password;
 
-  bcrypt.hash(pw, null, null, function(err, hash) {
-    var user = new User({username: username, password: hash});
-    user.fetch().then(function(model) {
-      if (model) {
-        req.session.userId = model.get('id');
-        req.session.username = model.get('username');
-        res.status(200);
-        res.redirect('/');
-      } else {
-        res.redirect('/login');
-      }
-    });
+  var user = new User({username: username});
+  user.fetch().then(function(model) {
+    if (model) {
+      bcrypt.compare(pw, model.attributes.password, function(err, pass) {
+          if ( pass ) {
+            req.session.userId = model.get('id');
+            req.session.username = model.get('username');
+            res.status(200);
+            res.redirect('/');
+          } else {
+            res.redirect('/login');
+          }
+      });
+    } else {
+      res.redirect('/login');
+    }
   });
 });
 
