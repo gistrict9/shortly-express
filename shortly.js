@@ -108,17 +108,22 @@ function(req, res){
 
 app.post('/login',
 function(req, res){
-  // check if username exists
-    // if it does
-      // check password against hash
-      // if password is correct
-        // create session for user
-        // redirect to home page
-      // if password is incorrect
-        // redirect to login - throw error
-    // if it doesn't
-      // redirect to login - throw error
+  var username = req.body.username;
+  var pw = req.body.password;
 
+  bcrypt.hash(pw, null, null, function(err, hash) {
+    var user = new User({username: username, password: hash});
+    user.fetch().then(function(model) {
+      if (model) {
+        req.session.userId = model.get('id');
+        req.session.username = model.get('username');
+        res.status(200);
+        res.redirect('/');
+      } else {
+        res.redirect('/login');
+      }
+    });
+  });
 });
 
 app.post('/signup',
@@ -152,7 +157,11 @@ function(req, res){
 
 });
 
-// app.post('/logout')
+app.get('/logout',
+function(req, res) {
+  req.session.destroy();
+  res.redirect('/login');
+});
 
 
 /************************************************************/
